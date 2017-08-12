@@ -240,17 +240,22 @@ class StreamReader(AsyncStreamReaderMixin):
 
     @asyncio.coroutine
     def readline(self):
+        return (yield from self.readuntil())
+
+    @asyncio.coroutine
+    def readuntil(self, separator=b'\n'):
         if self._exception is not None:
             raise self._exception
 
         line = []
         line_size = 0
         not_enough = True
+        seplen = len(separator)
 
         while not_enough:
             while self._buffer and not_enough:
                 offset = self._buffer_offset
-                ichar = self._buffer[0].find(b'\n', offset) + 1
+                ichar = self._buffer[0].find(separator, offset) + seplen
                 # Read from current offset to found b'\n' or to the end.
                 data = self._read_nowait_chunk(ichar - offset if ichar else -1)
                 line.append(data)
